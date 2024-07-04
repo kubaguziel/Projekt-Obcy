@@ -4,6 +4,7 @@ import pygame
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
+from alien import Alien
 
 class AlienInvasion:
     """Ogólna klasa przeznaczona do zarządzania zasobami i sposobem działania gry."""
@@ -20,6 +21,10 @@ class AlienInvasion:
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
+        self.aliens = pygame.sprite.Group()
+
+        self._create_fleet()
+
 
     def run_game(self):
         """Rozpoczęcie pętli głównej gry."""
@@ -27,6 +32,7 @@ class AlienInvasion:
             self._check_events()
             self.ship.update()
             self._update_bullets()
+            self._update_aliens()
             self._update_screen()
             
             
@@ -82,7 +88,51 @@ class AlienInvasion:
         for bullet in self.bullets.copy():      #musimy zrobić kopię grupy, ponieważ nie możemy usunąć elementó z listy podczas iteracji pętli przez tą listę
             if bullet.rect.bottom <=10:
                 self.bullets.remove(bullet)
-        print(len(self.bullets))
+        #print(len(self.bullets))
+
+    def _create_fleet(self):
+        """Utworzenie pełnej floty obcych"""
+        #utworzenie obcego i ustalenie liczby obych, którzy mieszczą się w rzędzie
+        #odległość pomiędzy obcymi jest równa szerokości obcego
+        alien = Alien(self)
+        alien_width,alien_height = alien.rect.size
+        available_space_x = self.settings.screen_width - (2 * alien_width)
+        number_aliens_x = available_space_x // (alien_width-2)
+
+        #ustalenie ile rzędów obcych zmieści się na ekranie
+        ship_height = self.ship.rect.height
+        available_space_y = (self.settings.screen_height - (3 * alien_height) - ship_height)
+        number_rows = available_space_y // (2*alien_height)
+        
+        for row_number in range(number_rows-1):
+            for alien_number in range(number_aliens_x):
+                #utworzenie obcego i umieszczenie go w rzędzie
+                self._create_alien(alien_number,row_number)
+
+    def _create_alien(self,alien_number,row_number):
+        alien = Alien(self)
+        alien_width, alien_height = alien.rect.size
+        alien.x = alien_width + 2 * alien_width * alien_number
+        alien.rect.x = alien.x
+        alien.rect.y = alien.rect.height + 2 * alien.rect.height * row_number
+        self.aliens.add(alien)
+
+    def _update_aliens(self):
+        self._check_fleet_edges()
+        self.aliens.update()
+
+    def _check_fleet_edges(self):
+        """Odpowiednia reakcja, gdy obcy dotrze do krawędzi ekranu"""
+        for alien in self.aliens.sprites():
+            if alien.check_edges():
+                self._change_fleet_direction()
+                break
+
+    def _change_fleet_direction(self):
+        """Przesunięcie całej floty w doł i zmiana kierunku, w którym się porusza."""
+        for alien in self.aliens.sprites():
+            alien.rect.y += self.settings.fleet_drop_speed
+        self.settings.fleet_direction *= -1
 
     def _update_screen(self):
          #Odświeżanie ekranu w trakcie każdej iteracji pętli
@@ -90,6 +140,8 @@ class AlienInvasion:
             self.ship.blitme()
             for bullet in self.bullets.sprites(): #lista wszystkich pocisków w grupie Sprites
                 bullet.draw_bullet()
+
+            self.aliens.draw(self.screen) #argumentem funkcji draw jest powierzchnia, na której mają być umieszczone obiekty
 
             #wyświetlanie ostatnio zmodyfikowanego ekranu
             pygame.display.flip()
