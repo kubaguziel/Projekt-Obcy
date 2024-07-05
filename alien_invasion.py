@@ -13,6 +13,7 @@ class AlienInvasion:
     def __init__(self):
         """Inicjalizacja gry i utworzenie jej zasobów"""
         pygame.init()
+        pygame.mouse.set_visible(0)
 
         self.settings = Settings()
 
