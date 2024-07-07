@@ -8,6 +8,7 @@ from bullet import Bullet
 from alien import Alien
 from gamestats import GameStats
 from button import Button
+from scoreboard import Scoreboard
 
 class AlienInvasion:
     """Ogólna klasa przeznaczona do zarządzania zasobami i sposobem działania gry."""
@@ -16,13 +17,15 @@ class AlienInvasion:
         pygame.init()
 
         self.settings = Settings()
-
         self.screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_width = self.screen.get_rect().height
         pygame.display.set_caption("Inwazja obcych")
 
         self.stats = GameStats(self)
+        self.scoreboard = Scoreboard(self)
+
+    
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
@@ -69,6 +72,7 @@ class AlienInvasion:
             self.stats.reset_stats()
             self.stats.game_active = True
             pygame.mouse.set_visible(0)
+            self.scoreboard.prep_score()
 
 
             #usunięcie zawartości bullets i aliens
@@ -128,6 +132,14 @@ class AlienInvasion:
         #sprawdzenie, czy którykolwiek pocisk trafił obcego
         #jeśeli tak, usuwamy zarówno pocisk, jak i obcego
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens,True,True)
+
+        #powiększanie wyniku po zestrzeleniu obcego
+        if collisions:
+            for aliens in collisions.values():
+                self.stats.score += self.settings.alien_points * len(aliens)
+            self.scoreboard.prep_score()
+            self.scoreboard.check_high_score()
+
         if len(self.aliens) == 0:
             self.bullets.empty()
             self.settings.increase_speed()
@@ -215,6 +227,9 @@ class AlienInvasion:
                 bullet.draw_bullet()
 
             self.aliens.draw(self.screen) #argumentem funkcji draw jest powierzchnia, na której mają być umieszczone obiekty
+
+            #wyświetlenie informacji o punktacji
+            self.scoreboard.show_score()
 
             #Wyświetlenie przycisku wtedy, gry gra jest nieaktywna
             if not self.stats.game_active:
