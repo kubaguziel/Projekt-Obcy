@@ -73,6 +73,8 @@ class AlienInvasion:
             self.stats.game_active = True
             pygame.mouse.set_visible(0)
             self.scoreboard.prep_score()
+            self.scoreboard.prep_level()
+            self.scoreboard.prep_ships()
 
 
             #usunięcie zawartości bullets i aliens
@@ -143,6 +145,8 @@ class AlienInvasion:
         if len(self.aliens) == 0:
             self.bullets.empty()
             self.settings.increase_speed()
+            self.stats.level += 1
+            self.scoreboard.prep_level()
             self._create_fleet()
 
     def _create_fleet(self):
@@ -184,6 +188,7 @@ class AlienInvasion:
         if(self.stats.ships_left > 0):
             #Zmniejszenie wartości dostępnych statków
             self.stats.ships_left -= 1
+            self.scoreboard.prep_ships()
             #Usunięcie zawartości list aliens i bullets
             self.aliens.empty()
             self.bullets.empty()

@@ -1,10 +1,12 @@
 import pygame
+from pygame.sprite import Sprite
 from settings import Settings
 
-class Ship:
+class Ship(Sprite):
     """Klasa przeznaczona do zarządzania statkiem kosmicznym"""
     def __init__(self, ai_game) -> None: #ai_game to odniesienie do aktualnego egzemplarza klasy AlienInvasion
         """Inicjalizacja statku kosmicznego i jego położenie poczatkowe"""
+        super().__init__()
         self.screen = ai_game.screen #przypisanie ekranu do obiektu klasy Ship, żeby był do nich łatwy dostęp w całej klasie
         self.screen_rect = ai_game.screen.get_rect() #dzięki temu statek kosmiczny zostaje umieszczony w odpowiednim miejscu na ekranie
 
