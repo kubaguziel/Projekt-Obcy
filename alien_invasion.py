@@ -7,13 +7,13 @@ from ship import Ship
 from bullet import Bullet
 from alien import Alien
 from gamestats import GameStats
+from button import Button
 
 class AlienInvasion:
     """Ogólna klasa przeznaczona do zarządzania zasobami i sposobem działania gry."""
     def __init__(self):
         """Inicjalizacja gry i utworzenie jej zasobów"""
         pygame.init()
-        pygame.mouse.set_visible(0)
 
         self.settings = Settings()
 
@@ -27,6 +27,8 @@ class AlienInvasion:
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self._create_fleet()
+
+        self.play_button = Button(self,self,"Graj")
 
 
     def run_game(self):
@@ -53,6 +55,30 @@ class AlienInvasion:
         
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
+
+    def _check_play_button(self,mouse_pos):
+        """Rozpoczęcie nowej gry po kliknięciu przycisku Graj"""
+        button_clicked = self.play_button.rect.collidepoint(mouse_pos)
+        if button_clicked and not self.stats.game_active:
+
+            #wyzerowanie ustawień dotyczących gry
+            self.settings.initialize_dynamic_settings()
+            self.stats.reset_stats()
+            self.stats.game_active = True
+            pygame.mouse.set_visible(0)
+
+
+            #usunięcie zawartości bullets i aliens
+            self.bullets.empty()
+            self.aliens.empty()
+
+            #utworzenie nowej floty i wyśrodkowanie statku
+            self._create_fleet()
+            self.ship.center_ship()
+
                      
     def _check_keydown_events(self,event):
         """Reakcja na naciśnięcie klawisza."""
@@ -104,6 +130,7 @@ class AlienInvasion:
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens,True,True)
         if len(self.aliens) == 0:
             self.bullets.empty()
+            self.settings.increase_speed()
             self._create_fleet()
 
     def _create_fleet(self):
@@ -155,6 +182,7 @@ class AlienInvasion:
             sleep(1)
             #zmieniamy gre na nieaktywną
         else:    
+            pygame.mouse.set_visible(True)
             self.stats.game_active = False
 
     def _check_aliens_bottom(self):
@@ -187,6 +215,10 @@ class AlienInvasion:
                 bullet.draw_bullet()
 
             self.aliens.draw(self.screen) #argumentem funkcji draw jest powierzchnia, na której mają być umieszczone obiekty
+
+            #Wyświetlenie przycisku wtedy, gry gra jest nieaktywna
+            if not self.stats.game_active:
+                self.play_button.draw_button()
 
             #wyświetlanie ostatnio zmodyfikowanego ekranu
             pygame.display.flip()
